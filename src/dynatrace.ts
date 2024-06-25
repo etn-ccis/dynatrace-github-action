@@ -142,3 +142,27 @@ export async function sendEvents(
     }
   }
 }
+
+export async function sendIngest(
+  url: string,
+  token: string,
+  cloudEvent: unknown
+): Promise<void> {
+  core.info(`Sending ingest biz event`)
+  const http: httpm.HttpClient = getClient(token, 'application/json')
+
+  try {
+    const res: httpm.HttpClientResponse = await http.post(
+      url.replace(/\/$/, '').concat('/api/v2/bizevents/ingest'),
+      JSON.stringify(cloudEvent)
+    )
+    core.info(await res.readBody())
+    if (res.message.statusCode !== 201) {
+      core.error(
+        `HTTP request failed with status code: ${res.message.statusCode})}`
+      )
+    }
+  } catch (error) {
+    core.error(`Exception while sending HTTP event request`)
+  }
+}

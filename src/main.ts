@@ -9,6 +9,25 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import * as core from '@actions/core'
 import * as d from './dynatrace'
 import * as yaml from 'js-yaml'
+import * as github from '@actions/github'
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+import type {WorkflowRunCompletedEvent} from '@octokit/webhooks-types'
+
+function buildCloudEvent(payload: WebhookPayload): unknown {
+  const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run
+  return {
+    specversion: '1.0',
+    id: `${workflowRun.id}`,
+    type: 'com.dynatrace.github.workflow.run',
+    source: 'dynatrace-workflow-ingester',
+    data: {
+      ...workflowRun,
+      run_duration_ms:
+        new Date(workflowRun.updated_at).getTime() -
+        new Date(workflowRun.run_started_at).getTime()
+    }
+  }
+}
 
 export async function run(): Promise<void> {
   try {
@@ -28,7 +47,14 @@ export async function run(): Promise<void> {
       const events = yaml.load(eStr) as d.Event[]
       d.sendEvents(url, token, events)
     }
-  } catch (error) {
+
+    const iStr = core.getInput('ingest')
+    const cloudEvent = buildCloudEvent(github.context.payload)
+    core.info(iStr)
+    if (iStr.length > 1) {
+      d.sendIngest(url, token, cloudEvent)
+    }
+  } catch (error: unknown) {
     core.setFailed(error.message)
   }
 }
