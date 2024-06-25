@@ -54,7 +54,7 @@ export async function run(): Promise<void> {
     if (iStr.length > 1) {
       d.sendIngest(url, token, cloudEvent)
     }
-  } catch (error: unknown) {
+  } catch (error) {
     core.setFailed(error.message)
   }
 }
