@@ -71,6 +71,7 @@ export async function sendMetrics(
   let lines = ''
 
   for (const m of metrics) {
+    core.info(JSON.stringify(m))
     lines = lines.concat(safeMetricKey(m.metric))
     if (m.dimensions) {
       for (const [key, value] of Object.entries(m.dimensions)) {
