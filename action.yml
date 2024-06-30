@@ -14,8 +14,8 @@ inputs:
   events:
     description: 'A list of event objects to send'
     default: '[]'
-  ingest:
-    description: 'True to ingest'
+  workflowCompleted:
+    description: 'True for sending a workflow completed event'
     default: ''
 runs:
   using: 'node16'

@@ -55,7 +55,7 @@ export async function run(): Promise<void> {
 
     const iStr = core.getInput('workflowCompleted')
     core.info(iStr)
-    if (iStr.length > 5) {
+    if (iStr.length > 1) {
       const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent[];
       d.sendWorkflowCompleted(url, token, cloudEvent);
     }
