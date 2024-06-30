@@ -266,7 +266,7 @@ function buildCloudEvent(payload) {
 }
 function createCommonDimensions(workflowRun, startTime, endTime) {
     return {
-        actor: workflowRun.actor.login,
+        actor: workflowRun.triggering_actor.login,
         conclusion: workflowRun.conclusion,
         title: workflowRun.display_title,
         run_duration_ms: endTime - startTime,
@@ -279,8 +279,9 @@ function createCommonDimensions(workflowRun, startTime, endTime) {
         status: workflowRun.status,
         workflow_id: workflowRun.workflow_id,
         run_id: workflowRun.id,
-        //workflow_url: workflowRun.workflow_url,
-        //run_url: workflowRun.url,
+        trigger_method: workflowRun.event,
+        workflow_url: workflowRun.workflow_url,
+        run_url: workflowRun.url,
     };
 }
 function buildWorkflowMetrics(payload) {

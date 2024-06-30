@@ -40,7 +40,7 @@ function buildCloudEvent(payload: WebhookPayload): unknown {
 
 function createCommonDimensions(workflowRun: any, startTime: number, endTime: number) {
   return {
-    actor: workflowRun.actor.login,
+    actor: workflowRun.triggering_actor.login,
     conclusion: workflowRun.conclusion,
     title: workflowRun.display_title,
     run_duration_ms: endTime - startTime,
@@ -53,8 +53,9 @@ function createCommonDimensions(workflowRun: any, startTime: number, endTime: nu
     status: workflowRun.status,
     workflow_id: workflowRun.workflow_id,
     run_id: workflowRun.id,
-    //workflow_url: workflowRun.workflow_url,
-    //run_url: workflowRun.url,
+    trigger_method: workflowRun.event,
+    workflow_url: workflowRun.workflow_url,
+    run_url: workflowRun.url,
   };
 }
 
