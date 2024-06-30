@@ -251,7 +251,7 @@ function buildCloudEvent(payload) {
         startTime: startTime,
         endTime: endTime,
         timeout: 1,
-        entitySelector: `dt.entity.environment`,
+        entitySelector: `type(host),entityName(myHost)`,
         type: 'CUSTOM_INFO',
         title: "github.workflow.run",
         properties: {
