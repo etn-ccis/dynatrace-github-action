@@ -99,6 +99,7 @@ export async function sendMetrics(
       core.error(
         `HTTP request failed with status code: ${res.message.statusCode})}`
       )
+      core.setFailed('Error occurred')
     }
   } catch (error) {
     core.error(`Exception while sending HTTP metric request`)
@@ -156,6 +157,7 @@ export async function sendEvents(
       }
     } else {
       core.info(`Unsupported event type!`)
+      core.setFailed('Error occurred')
     }
   }
 }
@@ -193,6 +195,7 @@ export async function sendWorkflowCompleted(
           core.error(
             `HTTP request failed with status code: ${res.message.statusCode})}`
           )
+          core.setFailed('Error occurred')
         }
       } catch (error) {
         core.error(`Exception while sending HTTP event request`)

@@ -97,6 +97,7 @@ function sendMetrics(url, token, metrics) {
             core.info(yield res.readBody());
             if (res.message.statusCode !== 202) {
                 core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
+                core.setFailed('Error occurred');
             }
         }
         catch (error) {
@@ -146,6 +147,7 @@ function sendEvents(url, token, events) {
             }
             else {
                 core.info(`Unsupported event type!`);
+                core.setFailed('Error occurred');
             }
         }
     });
@@ -174,6 +176,7 @@ function sendWorkflowCompleted(url, token, e) {
             core.info(yield res.readBody());
             if (res.message.statusCode !== 201) {
                 core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
+                core.setFailed('Error occurred');
             }
         }
         catch (error) {
