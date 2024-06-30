@@ -53,8 +53,8 @@ function createCommonDimensions(workflowRun: any, startTime: number, endTime: nu
     status: workflowRun.status,
     workflow_id: workflowRun.workflow_id,
     run_id: workflowRun.id,
-    workflow_url: workflowRun.workflow_url,
-    run_url: workflowRun.url,
+    //workflow_url: workflowRun.workflow_url,
+    //run_url: workflowRun.url,
   };
 }
 
