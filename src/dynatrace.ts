@@ -7,7 +7,11 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 */
 import * as core from '@actions/core'
+import * as github from "@actions/github"
 import * as httpm from '@actions/http-client'
+import { WebhookPayload } from "@actions/github/lib/interfaces";
+import type { WorkflowRunCompletedEvent } from "@octokit/webhooks-types";
+import { start } from 'repl';
 
 export interface Metric {
   metric: string
@@ -19,6 +23,17 @@ export interface Event {
   type: string
   title?: string
   timeout?: number
+  entitySelector: string
+  // custom key-value properties
+  properties?: Map<string, string>
+}
+
+export interface FullEvent {
+  endTime: number
+  startTime: number
+  type: string
+  title: string
+  timeout: number
   entitySelector: string
   // custom key-value properties
   properties?: Map<string, string>
@@ -143,26 +158,42 @@ export async function sendEvents(
   }
 }
 
-export async function sendIngest(
+export async function sendWorkflowCompleted(
   url: string,
   token: string,
-  cloudEvent: unknown
+  events: FullEvent[]
 ): Promise<void> {
-  core.info(`Sending ingest biz event`)
+  core.info(`Sending ${events.length} events`)
   const http: httpm.HttpClient = getClient(token, 'application/json')
 
-  try {
-    const res: httpm.HttpClientResponse = await http.post(
-      url.replace(/\/$/, '').concat('/api/v2/bizevents/ingest'),
-      JSON.stringify(cloudEvent)
-    )
-    core.info(await res.readBody())
-    if (res.message.statusCode !== 201) {
-      core.error(
-        `HTTP request failed with status code: ${res.message.statusCode})}`
-      )
+  for (const e of events) {
+    // create Dynatrace event structure
+    let payload
+      core.info(`Prepare the event`)
+      payload = {
+        startTime: e.startTime,
+        endTime: e.endTime,
+        eventType: e.type,
+        title: e.title,
+        timeout: e.timeout,
+        entitySelector: e.entitySelector,
+        properties: e.properties
+      }
+      core.info(JSON.stringify(payload))
+
+      try {
+        const res: httpm.HttpClientResponse = await http.post(
+          url.replace(/\/$/, '').concat('/api/v2/events/ingest'),
+          JSON.stringify(payload)
+        )
+        core.info(await res.readBody())
+        if (res.message.statusCode !== 201) {
+          core.error(
+            `HTTP request failed with status code: ${res.message.statusCode})}`
+          )
+        }
+      } catch (error) {
+        core.error(`Exception while sending HTTP event request`)
+      }
     }
-  } catch (error) {
-    core.error(`Exception while sending HTTP event request`)
   }
-}

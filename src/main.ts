@@ -12,22 +12,27 @@ import * as yaml from 'js-yaml'
 import * as github from '@actions/github'
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 import type {WorkflowRunCompletedEvent} from '@octokit/webhooks-types'
+import { start } from 'repl'
 
 function buildCloudEvent(payload: WebhookPayload): unknown {
-  const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run
+  const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run;
+  // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
+  const startTime = new Date(workflowRun.run_started_at).getTime();
+  const endTime = new Date(workflowRun.updated_at).getTime();
   return {
-    specversion: '1.0',
-    id: `${workflowRun.id}`,
-    type: 'com.dynatrace.github.workflow.run',
-    source: 'dynatrace-workflow-ingester',
-    data: {
+    startTime: startTime,
+    endTime: endTime,
+    timeout: 1,
+    entitySelector: `github.workflow_run.id="${workflowRun.id}"`,
+    type: 'CUSTOM_INFO',
+    title: "github.workflow.run",
+    properties: {
       ...workflowRun,
-      run_duration_ms:
-        new Date(workflowRun.updated_at).getTime() -
-        new Date(workflowRun.run_started_at).getTime()
-    }
-  }
+      run_duration_ms: endTime -startTime,
+    },
+  };
 }
+
 
 export async function run(): Promise<void> {
   try {
@@ -48,14 +53,14 @@ export async function run(): Promise<void> {
       d.sendEvents(url, token, events)
     }
 
-    const iStr = core.getInput('ingest')
-    const cloudEvent = buildCloudEvent(github.context.payload)
+    const iStr = core.getInput('workflowCompleted')
     core.info(iStr)
-    if (iStr.length > 1) {
-      d.sendIngest(url, token, cloudEvent)
+    if (iStr.length > 5) {
+      const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent[];
+      d.sendWorkflowCompleted(url, token, cloudEvent);
     }
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed('Error occurred')
   }
 }
 

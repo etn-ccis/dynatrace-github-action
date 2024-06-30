@@ -34,18 +34,18 @@
   "devDependencies": {
     "@octokit/webhooks-schemas": "^6.10.0",
     "@octokit/webhooks-types": "^6.10.0",
-    "@types/jest": "^26.0.23",
-    "@types/node": "^15.6.1",
-    "@typescript-eslint/parser": "^4.25.0",
-    "@vercel/ncc": "^0.28.6",
+    "@types/jest": "^27.1.2",
+    "@types/node": "^18.11.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "@vercel/ncc": "^0.31.1",
     "eslint": "^7.27.0",
     "eslint-plugin-github": "^4.1.3",
     "eslint-plugin-jest": "^24.3.5",
     "jest": "^24.9.0",
     "jest-circus": "^26.6.3",
     "js-yaml": "^4.1.0",
-    "prettier": "2.3.0",
-    "ts-jest": "^24.3.0",
-    "typescript": "^4.2.4"
+    "prettier": "2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.4.4"
   }
 }
