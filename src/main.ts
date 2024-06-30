@@ -57,6 +57,7 @@ export async function run(): Promise<void> {
     core.info(iStr)
     if (iStr.length > 1) {
       const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent[];
+      core.info(JSON.stringify(cloudEvent));
       d.sendWorkflowCompleted(url, token, cloudEvent);
     }
   } catch (error) {
