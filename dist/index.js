@@ -254,7 +254,13 @@ function buildCloudEvent(payload) {
         entitySelector: `dt.entity.environment`,
         type: 'CUSTOM_INFO',
         title: "github.workflow.run",
-        properties: Object.assign(Object.assign({}, workflowRun), { run_duration_ms: endTime - startTime }),
+        properties: {
+            //...workflowRun,
+            actor: workflowRun.actor.login,
+            conclusion: workflowRun.conclusion,
+            title: workflowRun.display_title,
+            run_duration_ms: endTime - startTime,
+        },
     };
 }
 function run() {

@@ -13,6 +13,7 @@ import * as github from '@actions/github'
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 import type {WorkflowRunCompletedEvent} from '@octokit/webhooks-types'
 import { start } from 'repl'
+import { title } from 'process'
 
 function buildCloudEvent(payload: WebhookPayload): unknown {
   const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run;
@@ -27,7 +28,10 @@ function buildCloudEvent(payload: WebhookPayload): unknown {
     type: 'CUSTOM_INFO',
     title: "github.workflow.run",
     properties: {
-      ...workflowRun,
+      //...workflowRun,
+      actor: workflowRun.actor.login,
+      conclusion: workflowRun.conclusion,
+      title: workflowRun.display_title,
       run_duration_ms: endTime -startTime,
     },
   };
