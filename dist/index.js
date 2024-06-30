@@ -39,7 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sendIngest = exports.sendEvents = exports.sendMetrics = exports.safeDimValue = exports.safeDimKey = exports.safeMetricKey = void 0;
+exports.sendWorkflowCompleted = exports.sendEvents = exports.sendMetrics = exports.safeDimValue = exports.safeDimKey = exports.safeMetricKey = void 0;
 /*
 Copyright 2020 Dynatrace LLC
 
@@ -149,23 +149,38 @@ function sendEvents(url, token, events) {
     });
 }
 exports.sendEvents = sendEvents;
-function sendIngest(url, token, cloudEvent) {
+function sendWorkflowCompleted(url, token, events) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Sending ingest biz event`);
+        core.info(`Sending ${events.length} events`);
         const http = getClient(token, 'application/json');
-        try {
-            const res = yield http.post(url.replace(/\/$/, '').concat('/api/v2/bizevents/ingest'), JSON.stringify(cloudEvent));
-            core.info(yield res.readBody());
-            if (res.message.statusCode !== 201) {
-                core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
+        for (const e of events) {
+            try {
+                // create Dynatrace event structure
+                let payload;
+                core.info(`Prepare the event`);
+                payload = {
+                    startTime: e.startTime,
+                    endTime: e.endTime,
+                    eventType: e.type,
+                    title: e.title,
+                    timeout: e.timeout,
+                    entitySelector: e.entitySelector,
+                    properties: e.properties
+                };
+                core.info(JSON.stringify(payload));
+                const res = yield http.post(url.replace(/\/$/, '').concat('/api/v2/events/ingest'), JSON.stringify(payload));
+                core.info(yield res.readBody());
+                if (res.message.statusCode !== 201) {
+                    core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
+                }
             }
-        }
-        catch (error) {
-            core.error(`Exception while sending HTTP event request`);
+            catch (error) {
+                core.error(`Exception while sending HTTP event request`);
+            }
         }
     });
 }
-exports.sendIngest = sendIngest;
+exports.sendWorkflowCompleted = sendWorkflowCompleted;
 
 
 /***/ }),
@@ -223,13 +238,17 @@ const yaml = __importStar(__nccwpck_require__(1917));
 const github = __importStar(__nccwpck_require__(5438));
 function buildCloudEvent(payload) {
     const workflowRun = payload.workflow_run;
+    // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
+    const startTime = new Date(workflowRun.run_started_at).getTime();
+    const endTime = new Date(workflowRun.updated_at).getTime();
     return {
-        specversion: '1.0',
-        id: `${workflowRun.id}`,
-        type: 'com.dynatrace.github.workflow.run',
-        source: 'dynatrace-workflow-ingester',
-        data: Object.assign(Object.assign({}, workflowRun), { run_duration_ms: new Date(workflowRun.updated_at).getTime() -
-                new Date(workflowRun.run_started_at).getTime() })
+        startTime: startTime,
+        endTime: endTime,
+        timeout: 1,
+        entitySelector: `dt.entity.environment`,
+        type: 'CUSTOM_INFO',
+        title: "github.workflow.run",
+        properties: Object.assign(Object.assign({}, workflowRun), { run_duration_ms: endTime - startTime }),
     };
 }
 function run() {
@@ -249,11 +268,13 @@ function run() {
                 const events = yaml.load(eStr);
                 d.sendEvents(url, token, events);
             }
-            const iStr = core.getInput('ingest');
-            const cloudEvent = buildCloudEvent(github.context.payload);
+            const iStr = core.getInput('workflowCompleted');
             core.info(iStr);
             if (iStr.length > 1) {
-                d.sendIngest(url, token, cloudEvent);
+                core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
+                const cloudEvent = buildCloudEvent(github.context.payload);
+                core.info(JSON.stringify(cloudEvent));
+                d.sendWorkflowCompleted(url, token, cloudEvent);
             }
         }
         catch (error) {
