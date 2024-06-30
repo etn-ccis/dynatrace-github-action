@@ -101,6 +101,7 @@ function sendMetrics(url, token, metrics) {
         }
         catch (error) {
             core.error(`Exception while sending HTTP metric request`);
+            core.setFailed('Error occurred');
         }
     });
 }
@@ -140,6 +141,7 @@ function sendEvents(url, token, events) {
                 }
                 catch (error) {
                     core.error(`Exception while sending HTTP event request`);
+                    core.setFailed('Error occurred');
                 }
             }
             else {
@@ -176,6 +178,7 @@ function sendWorkflowCompleted(url, token, e) {
         }
         catch (error) {
             core.error(`Exception while sending HTTP event request`);
+            core.setFailed('Error occurred');
         }
         //}
     });
@@ -273,7 +276,7 @@ function run() {
             if (iStr.length > 1) {
                 //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
                 const cloudEvent = buildCloudEvent(github.context.payload);
-                core.info(JSON.stringify(cloudEvent));
+                //core.info(JSON.stringify(cloudEvent));
                 d.sendWorkflowCompleted(url, token, cloudEvent);
             }
         }

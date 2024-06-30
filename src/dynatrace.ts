@@ -102,6 +102,7 @@ export async function sendMetrics(
     }
   } catch (error) {
     core.error(`Exception while sending HTTP metric request`)
+    core.setFailed('Error occurred')
   }
 }
 
@@ -151,6 +152,7 @@ export async function sendEvents(
         }
       } catch (error) {
         core.error(`Exception while sending HTTP event request`)
+        core.setFailed('Error occurred')
       }
     } else {
       core.info(`Unsupported event type!`)
@@ -194,6 +196,7 @@ export async function sendWorkflowCompleted(
         }
       } catch (error) {
         core.error(`Exception while sending HTTP event request`)
+        core.setFailed('Error occurred')
       }
     //}
   }
