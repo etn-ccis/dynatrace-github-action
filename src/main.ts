@@ -23,7 +23,7 @@ function buildCloudEvent(payload: WebhookPayload): unknown {
     startTime: startTime,
     endTime: endTime,
     timeout: 1,
-    entitySelector: ``,
+    entitySelector: `dt.entity.environment`,
     type: 'CUSTOM_INFO',
     title: "github.workflow.run",
     properties: {
