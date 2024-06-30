@@ -161,12 +161,12 @@ export async function sendEvents(
 export async function sendWorkflowCompleted(
   url: string,
   token: string,
-  events: FullEvent[]
+  e: FullEvent
 ): Promise<void> {
-  core.info(`Sending ${events.length} events`)
+  //core.info(`Sending ${event.length} events`)
   const http: httpm.HttpClient = getClient(token, 'application/json')
 
-  for (const e of events) {
+  //for (const e of events) {
     try {
       // create Dynatrace event structure
       let payload
@@ -195,5 +195,5 @@ export async function sendWorkflowCompleted(
       } catch (error) {
         core.error(`Exception while sending HTTP event request`)
       }
-    }
+    //}
   }

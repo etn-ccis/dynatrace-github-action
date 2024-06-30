@@ -149,35 +149,35 @@ function sendEvents(url, token, events) {
     });
 }
 exports.sendEvents = sendEvents;
-function sendWorkflowCompleted(url, token, events) {
+function sendWorkflowCompleted(url, token, e) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Sending ${events.length} events`);
+        //core.info(`Sending ${event.length} events`)
         const http = getClient(token, 'application/json');
-        for (const e of events) {
-            try {
-                // create Dynatrace event structure
-                let payload;
-                core.info(`Prepare the event`);
-                payload = {
-                    startTime: e.startTime,
-                    endTime: e.endTime,
-                    eventType: e.type,
-                    title: e.title,
-                    timeout: e.timeout,
-                    entitySelector: e.entitySelector,
-                    properties: e.properties
-                };
-                core.info(JSON.stringify(payload));
-                const res = yield http.post(url.replace(/\/$/, '').concat('/api/v2/events/ingest'), JSON.stringify(payload));
-                core.info(yield res.readBody());
-                if (res.message.statusCode !== 201) {
-                    core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
-                }
-            }
-            catch (error) {
-                core.error(`Exception while sending HTTP event request`);
+        //for (const e of events) {
+        try {
+            // create Dynatrace event structure
+            let payload;
+            core.info(`Prepare the event`);
+            payload = {
+                startTime: e.startTime,
+                endTime: e.endTime,
+                eventType: e.type,
+                title: e.title,
+                timeout: e.timeout,
+                entitySelector: e.entitySelector,
+                properties: e.properties
+            };
+            core.info(JSON.stringify(payload));
+            const res = yield http.post(url.replace(/\/$/, '').concat('/api/v2/events/ingest'), JSON.stringify(payload));
+            core.info(yield res.readBody());
+            if (res.message.statusCode !== 201) {
+                core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
             }
         }
+        catch (error) {
+            core.error(`Exception while sending HTTP event request`);
+        }
+        //}
     });
 }
 exports.sendWorkflowCompleted = sendWorkflowCompleted;
@@ -271,7 +271,7 @@ function run() {
             const iStr = core.getInput('workflowCompleted');
             core.info(iStr);
             if (iStr.length > 1) {
-                core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
+                //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
                 const cloudEvent = buildCloudEvent(github.context.payload);
                 core.info(JSON.stringify(cloudEvent));
                 d.sendWorkflowCompleted(url, token, cloudEvent);
