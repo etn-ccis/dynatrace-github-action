@@ -17,6 +17,9 @@ inputs:
   workflowCompleted:
     description: 'True for sending a workflow completed event'
     default: ''
+  team:
+    description: 'Team Name used for grouping metrics and events in Dynatrace'
+    default: ''
 runs:
   using: 'node16'
   main: 'dist/index.js'

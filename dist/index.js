@@ -264,7 +264,7 @@ function buildCloudEvent(payload) {
         },
     };
 }
-function createCommonDimensions(workflowRun, startTime, endTime) {
+function createCommonDimensions(workflowRun, startTime, endTime, team) {
     return {
         actor: workflowRun.triggering_actor.login,
         conclusion: workflowRun.conclusion,
@@ -282,9 +282,10 @@ function createCommonDimensions(workflowRun, startTime, endTime) {
         trigger_method: workflowRun.event,
         workflow_url: workflowRun.workflow_url,
         run_url: workflowRun.url,
+        team: team,
     };
 }
-function buildWorkflowMetrics(payload) {
+function buildWorkflowMetrics(payload, team) {
     const workflowRun = payload.workflow_run;
     // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
     const startTime = new Date(workflowRun.run_started_at).getTime();
@@ -293,12 +294,12 @@ function buildWorkflowMetrics(payload) {
     const workflowDurationMetric = {
         metric: 'github.workflow.duration',
         value: duration.toString(),
-        dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
+        dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime, team)),
     };
     const workflowRunMetric = {
         metric: 'github.worklfow.run',
         value: 1.0,
-        dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
+        dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime, team)),
     };
     let conclusionMetric;
     switch (workflowRun.conclusion) {
@@ -306,21 +307,21 @@ function buildWorkflowMetrics(payload) {
             conclusionMetric = {
                 metric: 'github.workflow.passed',
                 value: 1,
-                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
+                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime, team)),
             };
             break;
         case 'failure':
             conclusionMetric = {
                 metric: 'github.workflow.failed',
                 value: 1,
-                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
+                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime, team)),
             };
             break;
         case 'cancelled':
             conclusionMetric = {
                 metric: 'github.workflow.cancelled',
                 value: 1,
-                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
+                dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime, team)),
             };
             break;
     }
@@ -332,6 +333,7 @@ function run() {
         try {
             const url = core.getInput('url');
             const token = core.getInput('token');
+            const team = core.getInput('team');
             const mStr = core.getInput('metrics');
             core.info(mStr);
             if (mStr.length > 5) {
@@ -349,7 +351,7 @@ function run() {
             if (iStr.length > 1) {
                 //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
                 //const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent;
-                const metrics = buildWorkflowMetrics(github.context.payload);
+                const metrics = buildWorkflowMetrics(github.context.payload, team);
                 //core.info(JSON.stringify(cloudEvent));
                 d.sendMetrics(url, token, metrics);
                 //d.sendWorkflowCompleted(url, token, cloudEvent);
