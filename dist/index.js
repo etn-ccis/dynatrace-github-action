@@ -39,7 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sendWorkflowCompleted = exports.sendEvents = exports.sendMetrics = exports.safeDimValue = exports.safeDimKey = exports.safeMetricKey = void 0;
+exports.sendEvents = exports.sendMetrics = exports.safeDimValue = exports.safeDimKey = exports.safeMetricKey = void 0;
 /*
 Copyright 2020 Dynatrace LLC
 
@@ -154,40 +154,6 @@ function sendEvents(url, token, events) {
     });
 }
 exports.sendEvents = sendEvents;
-function sendWorkflowCompleted(url, token, e) {
-    return __awaiter(this, void 0, void 0, function* () {
-        //core.info(`Sending ${event.length} events`)
-        const http = getClient(token, 'application/json');
-        //for (const e of events) {
-        try {
-            // create Dynatrace event structure
-            let payload;
-            core.info(`Prepare the event`);
-            payload = {
-                startTime: e.startTime,
-                endTime: e.endTime,
-                eventType: e.type,
-                title: e.title,
-                timeout: e.timeout,
-                entitySelector: e.entitySelector,
-                properties: e.properties
-            };
-            core.info(JSON.stringify(payload));
-            const res = yield http.post(url.replace(/\/$/, '').concat('/api/v2/events/ingest'), JSON.stringify(payload));
-            core.info(yield res.readBody());
-            if (res.message.statusCode !== 201) {
-                core.error(`HTTP request failed with status code: ${res.message.statusCode})}`);
-                core.setFailed('Error occurred');
-            }
-        }
-        catch (error) {
-            core.error(`Exception while sending HTTP event request`);
-            core.setFailed('Error occurred');
-        }
-        //}
-    });
-}
-exports.sendWorkflowCompleted = sendWorkflowCompleted;
 
 
 /***/ }),
@@ -243,27 +209,6 @@ const core = __importStar(__nccwpck_require__(2186));
 const d = __importStar(__nccwpck_require__(6341));
 const yaml = __importStar(__nccwpck_require__(1917));
 const github = __importStar(__nccwpck_require__(5438));
-function buildCloudEvent(payload) {
-    const workflowRun = payload.workflow_run;
-    // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
-    const startTime = new Date(workflowRun.run_started_at).getTime();
-    const endTime = new Date(workflowRun.updated_at).getTime();
-    return {
-        startTime: startTime,
-        endTime: endTime,
-        timeout: 1,
-        entitySelector: `type(host),entityName(myHost)`,
-        type: 'CUSTOM_INFO',
-        title: "github.workflow.run",
-        properties: {
-            //...workflowRun,
-            actor: workflowRun.actor.login,
-            conclusion: workflowRun.conclusion,
-            title: workflowRun.display_title,
-            run_duration_ms: endTime - startTime,
-        },
-    };
-}
 function createCommonDimensions(workflowRun, startTime, endTime, team) {
     return {
         actor: workflowRun.triggering_actor.login,
@@ -349,12 +294,8 @@ function run() {
             const iStr = core.getInput('workflowCompleted');
             core.info(iStr);
             if (iStr.length > 1) {
-                //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
-                //const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent;
                 const metrics = buildWorkflowMetrics(github.context.payload, team);
-                //core.info(JSON.stringify(cloudEvent));
                 d.sendMetrics(url, token, metrics);
-                //d.sendWorkflowCompleted(url, token, cloudEvent);
             }
         }
         catch (error) {

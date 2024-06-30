@@ -16,28 +16,6 @@ import { start } from 'repl'
 import { title } from 'process'
 import { stat } from 'fs'
 
-function buildCloudEvent(payload: WebhookPayload): unknown {
-  const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run;
-  // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
-  const startTime = new Date(workflowRun.run_started_at).getTime();
-  const endTime = new Date(workflowRun.updated_at).getTime();
-  return {
-    startTime: startTime,
-    endTime: endTime,
-    timeout: 1,
-    entitySelector: `type(host),entityName(myHost)`,
-    type: 'CUSTOM_INFO',
-    title: "github.workflow.run",
-    properties: {
-      //...workflowRun,
-      actor: workflowRun.actor.login,
-      conclusion: workflowRun.conclusion,
-      title: workflowRun.display_title,
-      run_duration_ms: endTime -startTime,
-    },
-  };
-}
-
 function createCommonDimensions(workflowRun: any, startTime: number, endTime: number, team: string) {
   return {
     actor: workflowRun.triggering_actor.login,
@@ -133,13 +111,8 @@ export async function run(): Promise<void> {
     const iStr = core.getInput('workflowCompleted')
     core.info(iStr)
     if (iStr.length > 1) {
-      
-      //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
-      //const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent;
       const metrics = buildWorkflowMetrics(github.context.payload, team) as d.Metric[]
-      //core.info(JSON.stringify(cloudEvent));
       d.sendMetrics(url, token, metrics)
-      //d.sendWorkflowCompleted(url, token, cloudEvent);
     }
   } catch (error) {
     core.setFailed('Error occurred')
