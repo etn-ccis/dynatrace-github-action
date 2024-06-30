@@ -113,7 +113,7 @@ Install the dependencies
 
 ```bash
 $ npm install
-
+clscl
 up to date, audited 1004 packages in 3s
 ```
 

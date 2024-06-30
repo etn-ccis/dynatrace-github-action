@@ -7,7 +7,11 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 */
 import * as core from '@actions/core'
+import * as github from "@actions/github"
 import * as httpm from '@actions/http-client'
+import { WebhookPayload } from "@actions/github/lib/interfaces";
+import type { WorkflowRunCompletedEvent } from "@octokit/webhooks-types";
+import { start } from 'repl';
 
 export interface Metric {
   metric: string
@@ -19,6 +23,17 @@ export interface Event {
   type: string
   title?: string
   timeout?: number
+  entitySelector: string
+  // custom key-value properties
+  properties?: Map<string, string>
+}
+
+export interface FullEvent {
+  endTime: number
+  startTime: number
+  type: string
+  title: string
+  timeout: number
   entitySelector: string
   // custom key-value properties
   properties?: Map<string, string>
@@ -56,6 +71,7 @@ export async function sendMetrics(
   let lines = ''
 
   for (const m of metrics) {
+    core.info(JSON.stringify(m))
     lines = lines.concat(safeMetricKey(m.metric))
     if (m.dimensions) {
       for (const [key, value] of Object.entries(m.dimensions)) {
@@ -84,9 +100,11 @@ export async function sendMetrics(
       core.error(
         `HTTP request failed with status code: ${res.message.statusCode})}`
       )
+      core.setFailed('Error occurred')
     }
   } catch (error) {
     core.error(`Exception while sending HTTP metric request`)
+    core.setFailed('Error occurred')
   }
 }
 
@@ -136,9 +154,11 @@ export async function sendEvents(
         }
       } catch (error) {
         core.error(`Exception while sending HTTP event request`)
+        core.setFailed('Error occurred')
       }
     } else {
       core.info(`Unsupported event type!`)
+      core.setFailed('Error occurred')
     }
   }
 }
