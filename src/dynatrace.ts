@@ -167,21 +167,21 @@ export async function sendWorkflowCompleted(
   const http: httpm.HttpClient = getClient(token, 'application/json')
 
   for (const e of events) {
-    // create Dynatrace event structure
-    let payload
-      core.info(`Prepare the event`)
-      payload = {
-        startTime: e.startTime,
-        endTime: e.endTime,
-        eventType: e.type,
-        title: e.title,
-        timeout: e.timeout,
-        entitySelector: e.entitySelector,
-        properties: e.properties
-      }
-      core.info(JSON.stringify(payload))
+    try {
+      // create Dynatrace event structure
+      let payload
+        core.info(`Prepare the event`)
+        payload = {
+          startTime: e.startTime,
+          endTime: e.endTime,
+          eventType: e.type,
+          title: e.title,
+          timeout: e.timeout,
+          entitySelector: e.entitySelector,
+          properties: e.properties
+        }
+        core.info(JSON.stringify(payload))
 
-      try {
         const res: httpm.HttpClientResponse = await http.post(
           url.replace(/\/$/, '').concat('/api/v2/events/ingest'),
           JSON.stringify(payload)
