@@ -14,6 +14,7 @@ import {WebhookPayload} from '@actions/github/lib/interfaces'
 import type {WorkflowRunCompletedEvent} from '@octokit/webhooks-types'
 import { start } from 'repl'
 import { title } from 'process'
+import { stat } from 'fs'
 
 function buildCloudEvent(payload: WebhookPayload): unknown {
   const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run;
@@ -36,6 +37,75 @@ function buildCloudEvent(payload: WebhookPayload): unknown {
     },
   };
 }
+
+function createCommonDimensions(workflowRun: any, startTime: number, endTime: number) {
+  return {
+    actor: workflowRun.actor.login,
+    conclusion: workflowRun.conclusion,
+    title: workflowRun.display_title,
+    run_duration_ms: endTime - startTime,
+    start_time: startTime,
+    end_time: endTime,
+    branch: workflowRun.head_branch,
+    repository: workflowRun.head_repository.full_name,
+    run_attempt: workflowRun.run_attempt,
+    run_number: workflowRun.run_number,
+    status: workflowRun.status,
+    workflow_id: workflowRun.workflow_id,
+    run_id: workflowRun.id,
+    workflow_url: workflowRun.workflow_url,
+    run_url: workflowRun.url,
+  };
+}
+
+function buildWorkflowMetrics(payload: WebhookPayload): unknown {
+  const workflowRun = (payload as WorkflowRunCompletedEvent).workflow_run;
+  // Assuming workflowRun.run_started_at and workflowRun.updated_at are date strings
+  const startTime = new Date(workflowRun.run_started_at).getTime();
+  const endTime = new Date(workflowRun.updated_at).getTime();
+  const duration = endTime - startTime;
+
+  const workflowDurationMetric = {
+    metric: 'github.workflow.duration',
+    value: duration.toString(),
+    dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
+  };
+
+  const workflowRunMetric = {
+    key: 'github.worklfow.run',
+    value: 1.0,
+    dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
+  };
+
+  let conclusionMetric: any;
+  switch (workflowRun.conclusion) {
+    case 'success':
+      conclusionMetric = {
+        key: 'github.workflow.passed',
+        value: 1,
+        dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
+      };
+      break;
+    case 'failure':
+      conclusionMetric = {
+        key: 'github.workflow.failed',
+        value: 1,
+        dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
+      };
+      break;
+    case 'cancelled':
+      conclusionMetric = {
+        key: 'github.workflow.cancelled',
+        value: 1,
+        dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
+      };
+      break;
+  }
+
+  return [workflowRunMetric, workflowDurationMetric, conclusionMetric];
+
+};
+
 
 
 export async function run(): Promise<void> {
@@ -61,9 +131,11 @@ export async function run(): Promise<void> {
     core.info(iStr)
     if (iStr.length > 1) {
       //core.info(`Payload: ${JSON.stringify(github.context.payload)}`);
-      const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent;
+      //const cloudEvent = buildCloudEvent(github.context.payload) as d.FullEvent;
+      const metrics = buildWorkflowMetrics(github.context.payload) as d.Metric[]
       //core.info(JSON.stringify(cloudEvent));
-      d.sendWorkflowCompleted(url, token, cloudEvent);
+      d.sendMetrics(url, token, metrics)
+      //d.sendWorkflowCompleted(url, token, cloudEvent);
     }
   } catch (error) {
     core.setFailed('Error occurred')
