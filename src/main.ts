@@ -72,7 +72,7 @@ function buildWorkflowMetrics(payload: WebhookPayload): unknown {
   };
 
   const workflowRunMetric = {
-    key: 'github.worklfow.run',
+    metric: 'github.worklfow.run',
     value: 1.0,
     dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
   };
@@ -81,21 +81,21 @@ function buildWorkflowMetrics(payload: WebhookPayload): unknown {
   switch (workflowRun.conclusion) {
     case 'success':
       conclusionMetric = {
-        key: 'github.workflow.passed',
+        metric: 'github.workflow.passed',
         value: 1,
         dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
       };
       break;
     case 'failure':
       conclusionMetric = {
-        key: 'github.workflow.failed',
+        metric: 'github.workflow.failed',
         value: 1,
         dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
       };
       break;
     case 'cancelled':
       conclusionMetric = {
-        key: 'github.workflow.cancelled',
+        metric: 'github.workflow.cancelled',
         value: 1,
         dimensions: { ...createCommonDimensions(workflowRun, startTime, endTime), },
       };

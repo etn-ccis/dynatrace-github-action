@@ -295,7 +295,7 @@ function buildWorkflowMetrics(payload) {
         dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
     };
     const workflowRunMetric = {
-        key: 'github.worklfow.run',
+        metric: 'github.worklfow.run',
         value: 1.0,
         dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
     };
@@ -303,21 +303,21 @@ function buildWorkflowMetrics(payload) {
     switch (workflowRun.conclusion) {
         case 'success':
             conclusionMetric = {
-                key: 'github.workflow.passed',
+                metric: 'github.workflow.passed',
                 value: 1,
                 dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
             };
             break;
         case 'failure':
             conclusionMetric = {
-                key: 'github.workflow.failed',
+                metric: 'github.workflow.failed',
                 value: 1,
                 dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
             };
             break;
         case 'cancelled':
             conclusionMetric = {
-                key: 'github.workflow.cancelled',
+                metric: 'github.workflow.cancelled',
                 value: 1,
                 dimensions: Object.assign({}, createCommonDimensions(workflowRun, startTime, endTime)),
             };
